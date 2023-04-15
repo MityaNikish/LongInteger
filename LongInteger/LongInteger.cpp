@@ -30,13 +30,13 @@ LongInteger::LongInteger(const char* iStr)
             sign_negative = false;
         }
 
-        int _long = _storage_unit_size();
+        int size_exponent = _storage_unit_size();
 
-        for (int i = str.length(); i >= 0; i -= _long) {
-            if (i < _long)
-                    number.push_back(atoi(str.substr(0, i).c_str()));
+        for (long long i = str.length(); i >= 0; i -= size_exponent) {
+            if (i < size_exponent)
+                number.push_back(atoi(str.substr(0, i).c_str()));
             else
-                    number.push_back(atoi(str.substr(i - _long, _long).c_str()));
+                number.push_back(atoi(str.substr(i - size_exponent, size_exponent).c_str()));
         }
         _remove_leading_zeros();
     }
@@ -56,10 +56,10 @@ size_t LongInteger::ToString(char* buff, size_t buff_lenght) const {
         last_bloc /= 10;
         count_last_bloc++;
     }
-    int _long = _storage_unit_size();
+    int max_size_exponent = _storage_unit_size();
 
-    size_t size = (size_t)((number.size() - 1) * _long + count_last_bloc + sign_negative + 1);
-    if (buff_lenght < size) {
+    size_t size = (size_t)((number.size() - 1) * max_size_exponent + count_last_bloc + (int)sign_negative + 1);
+    if ((buff == nullptr) || (buff_lenght < size)) {
         return size;
     }
 
@@ -67,16 +67,19 @@ size_t LongInteger::ToString(char* buff, size_t buff_lenght) const {
     if (sign_negative) {
         str.push_back('-');
     }
-    int arg;
-    for (int i = number.size() - 1; i > 0; i--) {
+
+    str += std::to_string(number[number.size() - 1]);
+    for (long long i = number.size() - 2; i >= 0; i--) {
+        for (size_t size_exponent = std::to_string(number[i]).size(); size_exponent < max_size_exponent; size_exponent++) {
+            str += '0';
+        }
         str += std::to_string(number[i]);
     }
 
-    str.push_back('\0');
-    return size;
 
-    std::string str_buff = buff;
-    std::swap(str_buff, str);
+    str.push_back('\0');
+    strcpy_s(buff, buff_lenght, str.c_str());
+    return size;
 }
 
 
@@ -159,7 +162,7 @@ bool LongInteger::operator<(const LongInteger& right) const {
             return number.size() < right.number.size();
         }
         else {
-            for (int i = number.size() - 1; i >= 0; --i) {
+            for (long long i = number.size() - 1; i >= 0; --i) {
                 if (number[i] != right.number[i]) return number[i] < right.number[i];
             }
             return false;
@@ -230,9 +233,9 @@ LongInteger LongInteger::operator*(const LongInteger& right) const {
         int extra = 0;
         for (size_t j = 0; j < right.number.size() || extra != 0; ++j) {
             long long cur = result.number[i + j] +
-                left.number[i] * (j < right.number.size() ? right.number[j] : 0) + extra;
+                static_cast<long long>(left.number[i]) * (j < right.number.size() ? right.number[j] : 0) + extra;
             result.number[i + j] = cur % LongInteger::BASE;
-            extra = cur / LongInteger::BASE;
+            extra = static_cast<int>(cur / LongInteger::BASE);
         }
     }
 
@@ -249,7 +252,7 @@ LongInteger LongInteger::operator/(const LongInteger& right) const {
     LongInteger result, current;
 
     result.number.resize(left.number.size());
-    for (int i = left.number.size() - 1; i >= 0; --i) {
+    for (long long i = left.number.size() - 1; i >= 0; --i) {
         current._shift_right();
         current.number[0] = left.number[i];
         current._remove_leading_zeros();

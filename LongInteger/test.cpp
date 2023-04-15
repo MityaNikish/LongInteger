@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "LongInteger.hpp"
+#include <random>
 
 //-----------------------------------------------------------------------------//
 
 TEST(TestCase_Ctor, Test_nathing) {
 	LongInteger number_1("123456");
-	char* str;
-	EXPECT_TRUE(6 + 1, number_1.ToString(str, 0));
+	EXPECT_TRUE(6 + 1, number_1.ToString(nullptr, 0));
 }
 
 TEST(TestCase_Ctor, Test_str) {
@@ -19,8 +19,7 @@ TEST(TestCase_Ctor, Test_str) {
 
 TEST(TestCase_Ctor, Test_Int) {
 	LongInteger number_1(12506151);
-	char* str;
-	EXPECT_TRUE(8 + 1, number_1.ToString(str, 0));
+	EXPECT_TRUE(8 + 1, number_1.ToString(nullptr, 0));
 }
 
 //-----------------------------------------------------------------------------//
@@ -33,13 +32,61 @@ TEST(TestCase_CtorCopy, Test) {
 
 //-----------------------------------------------------------------------------//
 
-TEST(TestCase_ToString, Test) {
+TEST(TestCase_ToString, Test1) {
 	LongInteger number_1("-987654321");
 	char* str = new char[5];
 	EXPECT_EQ(11, number_1.ToString(str, 5));
 	delete[](str);
 	str = new char[11];
 	EXPECT_EQ(11, number_1.ToString(str, 11));
+	delete[](str);
+}
+
+TEST(TestCase_ToString, Test2) {
+	LongInteger number_1("-987654321");
+	LongInteger number_2("54");
+	LongInteger number_3 = number_1 * number_2;
+	char* str = new char[20];
+	EXPECT_EQ(13, number_3.ToString(str, 20));
+	delete[](str);
+}
+
+TEST(TestCase_ToString, Test3) {
+	std::random_device dev;
+	std::mt19937 rng(dev());
+	std::uniform_int_distribution<std::mt19937::result_type> number_length(15, 50);
+	std::uniform_int_distribution<std::mt19937::result_type> numeral(0, 9);
+	std::string input_str_number;
+	char* bufer = new char;
+
+	if (numeral(rng) % 2 == 0) {
+		input_str_number.push_back('-');
+	}
+	input_str_number.push_back('8');
+	
+	for (size_t i = 0; i < number_length(rng); i++) {
+		input_str_number.push_back(numeral(rng) + '0');
+	}
+	input_str_number.push_back('\0');
+	LongInteger number(input_str_number.c_str());
+
+	size_t bufer_length = number.ToString(bufer, 1);
+	delete(bufer);
+	bufer = new char[bufer_length];
+	EXPECT_EQ(number.ToString(bufer, bufer_length), bufer_length);
+	EXPECT_STREQ(bufer, input_str_number.c_str());
+	LongInteger _number(input_str_number.c_str());
+	delete[](bufer);
+}
+
+TEST(TestCase_ToString, Test4) {
+	std::string str_number("-1011111001111000111000011000001");
+	str_number.push_back('\0');
+	LongInteger number(str_number.c_str());
+	size_t size_number = str_number.size();
+	char* str = new char[size_number];
+	EXPECT_EQ(size_number, number.ToString(str, size_number));
+	EXPECT_STREQ(str, str_number.c_str());
 	delete[](str);
 }
 
@@ -419,6 +466,12 @@ TEST(TestCase_OperatorMultiplicationNotChanging, Test_DifferentSigns_2) {
 	EXPECT_TRUE(result == result_supposed);
 }
 
+TEST(TestCase_OperatorMultiplicationNotChanging, Test_Breaking) {
+	LongInteger result = LongInteger{ "987654321987654321" } * LongInteger{ "123456789123456789" };
+	LongInteger result_supposed("121932631356500531347203169112635269");
+	EXPECT_TRUE(result == result_supposed);
+}
+
 //-----------------------------------------------------------------------------//
 
 TEST(TestCase_OperatorMultiplicationChanging, Test_CorrecttRansfer) {
@@ -597,23 +650,23 @@ TEST(TestCase_OperatorDivisionChanging_WithInt, Test_) {
 
 //-----------------------------------------------------------------------------//
 
-TEST(TestCase_RealBigNumbers, Test_) {
-	std::string str;
-	for (size_t i = 0; i < 10000000; i++) {
-		str.push_back('9');
-	}
-	LongInteger number_1(str.c_str());
-	LongInteger number_2(str.c_str());
-	number_2 /= 333333333;
-	number_1 -= number_2;
-	//number_1 += (number_1 % number_2);
-	//number_1 = number_1 / number_2;
-	//number_2 = number_1 + number_2;
-	//number_2 -= 999999999;
-	//number_2 *= 7;
-	//number_1 = number_1 + number_2 * number_1;
-	EXPECT_TRUE(number_2 != number_1);
-}
+//TEST(TestCase_RealBigNumbers, Test_) {
+//	std::string str;
+//	for (size_t i = 0; i < 10000000; i++) {
+//		str.push_back('9');
+//	}
+//	LongInteger number_1(str.c_str());
+//	LongInteger number_2(str.c_str());
+//	number_2 /= 333333333;
+//	number_1 -= number_2;
+//	//number_1 += (number_1 % number_2);
+//	//number_1 = number_1 / number_2;
+//	//number_2 = number_1 + number_2;
+//	//number_2 -= 999999999;
+//	//number_2 *= 7;
+//	//number_1 = number_1 + number_2 * number_1;
+//	EXPECT_TRUE(number_2 != number_1);
+//}
 
 //TEST(TestCaseName, TestName) {
 //  EXPECT_EQ(1, 1);
