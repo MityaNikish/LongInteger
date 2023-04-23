@@ -40,9 +40,10 @@ private:
 	static int _storage_unit_size();
 	const LongInteger operator -() const;
 	void _shift_right();
+	LongInteger& adder(const LongInteger& _right, const bool negative);
 
 private:
-	static const int BASE = 1000000;
+	static const int BASE = 1000000000;
 	std::vector<int> number;
 	bool sign_negative;
 };

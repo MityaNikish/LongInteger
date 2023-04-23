@@ -1,6 +1,10 @@
 #include "pch.h"
+
 #include "LongInteger.hpp"
 #include <random>
+
+#include <time.h>
+#include  <fstream>
 
 //-----------------------------------------------------------------------------//
 
@@ -356,6 +360,14 @@ TEST(TestCase_OperatorAditionChanging, Test_DifferentSigns_2) {
 	EXPECT_TRUE(number_1 == result_supposed);
 }
 
+TEST(TestCase_OperatorAditionChanging, Test_Corectly_1) {
+	LongInteger number_1("80509740938211948536753469621962264689830310329122849810180724");
+	LongInteger number_2("752988030804275145849205212476531422325926585142571146");
+	LongInteger result_supposed("80509741691199979341028615471167477166361732655049434952751870");
+	number_1 += number_2;
+	EXPECT_TRUE(number_1 == result_supposed);
+}
+
 //-----------------------------------------------------------------------------//
 
 TEST(TestCase_OperatorSubtractionNotChanging, Test_PositiveSign) {
@@ -649,6 +661,100 @@ TEST(TestCase_OperatorDivisionChanging_WithInt, Test_) {
 }
 
 //-----------------------------------------------------------------------------//
+
+TEST(TestCase_OperatorWithZero, Test_Equals)
+{
+	EXPECT_TRUE(LongInteger{} == LongInteger{});
+	EXPECT_TRUE(LongInteger{} == LongInteger{ "0" });
+	EXPECT_TRUE(LongInteger{"0"} == LongInteger{});
+	EXPECT_TRUE(LongInteger{"0"} == LongInteger{"0"});
+	EXPECT_TRUE(LongInteger{ "0" } == LongInteger{ "-0" });
+	EXPECT_TRUE(LongInteger{ "-0" } == LongInteger{ "0" });
+	EXPECT_TRUE(LongInteger{ "-0" } == LongInteger{ "-0" });
+	EXPECT_TRUE(LongInteger{ "-00000000000000000" } == LongInteger{ "000" });
+}
+
+TEST(TestCase_OperatorWithZero, Test_Less)
+{
+	EXPECT_TRUE(!(LongInteger{} < LongInteger{}));
+	EXPECT_TRUE(!(LongInteger{} < LongInteger{ "0" }));
+	EXPECT_TRUE(!(LongInteger{ "0" } < LongInteger{}));
+	EXPECT_TRUE(!(LongInteger{ "0" } < LongInteger{ "0" }));
+}
+
+TEST(TestCase_OperatorWithZero, Test_LessEquals)
+{
+	EXPECT_TRUE(LongInteger{} <= LongInteger{});
+	EXPECT_TRUE(LongInteger{} <= LongInteger{ "0" });
+	EXPECT_TRUE(LongInteger{ "0" } <= LongInteger{});
+	EXPECT_TRUE(LongInteger{ "0" } <= LongInteger{ "0" });
+}
+
+TEST(TestCase_OperatorWithZero, Test_More)
+{
+	EXPECT_TRUE(!(LongInteger{} > LongInteger{}));
+	EXPECT_TRUE(!(LongInteger{} > LongInteger{ "0" }));
+	EXPECT_TRUE(!(LongInteger{ "0" } > LongInteger{}));
+	EXPECT_TRUE(!(LongInteger{ "0" } > LongInteger{ "0" }));
+}
+
+TEST(TestCase_OperatorWithZero, Test_MoreEquals)
+{
+	EXPECT_TRUE(LongInteger{} >= LongInteger{});
+	EXPECT_TRUE(LongInteger{} >= LongInteger{ "0" });
+	EXPECT_TRUE(LongInteger{ "0" } >= LongInteger{});
+	EXPECT_TRUE(LongInteger{ "0" } >= LongInteger{ "0" });
+}
+
+TEST(TestCase_OperatorWithZero, Test_NotEquals)
+{
+	EXPECT_TRUE(!(LongInteger{} != LongInteger{}));
+	EXPECT_TRUE(!(LongInteger{} != LongInteger{ "0" }));
+	EXPECT_TRUE(!(LongInteger{ "0" } != LongInteger{}));
+	EXPECT_TRUE(!(LongInteger{ "0" } != LongInteger{ "0" }));
+}
+
+//TEST(TestCase_Timer, Test_comparison_operators)
+//{
+//	std::random_device dev;
+//	std::mt19937 rng(dev());
+//	std::uniform_int_distribution<std::mt19937::result_type> number_length(10000, 10000);
+//	std::uniform_int_distribution<std::mt19937::result_type> numeral(0, 9);
+//	std::string input_str_number;
+//
+//	input_str_number.push_back('1');
+//	for (size_t i = 0; i < number_length(rng); i++) {
+//		input_str_number.push_back(numeral(rng) + '0');
+//	}
+//
+//	const LongInteger number_1(input_str_number.c_str());
+//
+//	input_str_number.clear();
+//	input_str_number.push_back('1');
+//	for (size_t i = 0; i < number_length(rng); i++) {
+//		input_str_number.push_back(numeral(rng) + '0');
+//	}
+//
+//	const LongInteger number_2(input_str_number.c_str());
+//
+//	std::ofstream iof;
+//	iof.open("result_time.txt", std::ios::app);
+//
+//	clock_t start = clock();
+//
+//	const bool result_operator = number_1 < number_2;
+//
+//	clock_t end = clock();
+//	const long double seconds = static_cast<long double>(end - start) / CLOCKS_PER_SEC;
+//
+//	if (iof.is_open())
+//	{
+//		iof << std::endl;
+//		iof << "The time: " << seconds  << " seconds." << std::endl;
+//	}
+//
+//	iof.close();
+//}
 
 //TEST(TestCase_RealBigNumbers, Test_) {
 //	std::string str;

@@ -37,7 +37,6 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\bTree\Test\gtest_mem_main.cpp" />
     <ClCompile Include="LongInteger.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="pch.cpp">
@@ -49,6 +48,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="result_time.txt" />
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
