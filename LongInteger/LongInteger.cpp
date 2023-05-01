@@ -5,39 +5,49 @@
 LongInteger::LongInteger() : sign_negative(false) {};
 
 LongInteger::LongInteger(int i) {
-    if (i < 0) {
-        sign_negative = true; i = -i;
-    }
-    else sign_negative = false;
-    do {
-        number.push_back(i % LongInteger::BASE);
-        i /= LongInteger::BASE;
-    } while (i != 0);
+    const LongInteger number_instance(std::to_string(i).c_str());
+    number = number_instance.number;
+    sign_negative = number_instance.sign_negative;
 }
 
 LongInteger::LongInteger(const char* iStr)
 {
+    const char set_of_numbers[11] = "0123456789";
+    const char plus = '+';
+    const char minus = '-';
+
     std::string str(iStr);
 	if (str.length() == 0) {
         sign_negative = false;
         return;
     }
 
-    if (str[0] == '-') {
+    if (str[0] == minus) {
         str = str.substr(1);
         sign_negative = true;
     }
     else {
+        if (str[0] == plus) {
+            str = str.substr(1);
+        }
         sign_negative = false;
+    }
+
+    if (str.find_first_not_of(set_of_numbers) != std::string::npos) {
+        sign_negative = false;
+        number.clear();
+        throw std::invalid_argument("Invalid string in constructor.");
     }
 
     const int size_exponent = _storage_unit_size();
 
     for (long long i = static_cast<long long>(str.size()); i >= 0; i -= size_exponent) {
-        if (i < size_exponent)
+        if (i < size_exponent) {
             number.push_back(atoi(str.substr(0, i).c_str()));
-        else
+        }
+        else {
             number.push_back(atoi(str.substr(i - size_exponent, size_exponent).c_str()));
+        }
     }
     _remove_leading_zeros();
 
@@ -125,7 +135,10 @@ LongInteger& LongInteger::operator/=(const LongInteger& val) {
     return *this = *this / val;
 }
 
-
+bool LongInteger::is_zero() const
+{
+    return (number.empty() || (number.size() == 1 && number[0] == 0));
+}
 
 bool LongInteger::operator==(const LongInteger& right) const
 {
@@ -133,31 +146,11 @@ bool LongInteger::operator==(const LongInteger& right) const
         return false;
     }
 
-    if (number.empty()) {
-        if (right.number.empty() || (right.number.size() == 1 && right.number[0] == 0)) {
-            return true;
-        }
-        return false;
+    if (this->is_zero() && right.is_zero()) {
+        return true;
     }
 
-    if (right.number.empty()) {
-        if (number.size() == 1 && number[0] == 0) {
-            return true;
-        }
-        return false;
-    }
-
-    if (number.size() != right.number.size()) {
-        return false;
-    }
-
-    for (size_t i = 0; i < number.size(); ++i) {
-        if (number[i] != right.number[i]) {
-            return false;
-        }
-    }
-
-    return true;
+    return number == right.number;
 }
 
 bool LongInteger::operator<(const LongInteger& right) const {
@@ -216,8 +209,7 @@ LongInteger LongInteger::operator+(const LongInteger& right) const {
     if (right.sign_negative) {
         return left - (-right);
     }
-    if (left.number.size() > right.number.size())
-    {
+    if (left.number.size() > right.number.size()) {
         return right + *this;
     }
 
@@ -260,32 +252,21 @@ LongInteger LongInteger::operator*(const LongInteger& right) const {
 
 LongInteger LongInteger::operator/(const LongInteger& right) const {
     if (right == 0) {
-        throw std::exception("Division by zero");
+        throw std::invalid_argument("Division by zero");
     }
-    LongInteger temp = right;
-    temp.sign_negative = false;
+
+    LongInteger right_positive = right;
+    right_positive.sign_negative = false;
+
     LongInteger result, current;
 
     result.number.resize(this->number.size());
     for (long long i = static_cast<long long>(this->number.size()) - 1; i >= 0; --i) {
-        current._shift_right();
+        current.number.insert(current.number.begin(), 0);
         current.number[0] = this->number[i];
         current._remove_leading_zeros();
-
-        int x = 0, left_meaning = 0, right_meaning = LongInteger::BASE;
-
-        while (left_meaning <= right_meaning) {
-            int m = (left_meaning + right_meaning) / 2;
-            LongInteger t = temp * m;
-            if (t <= current) {
-                x = m;
-                left_meaning = m + 1;
-            }
-            else right_meaning = m - 1;
-        }
-
-        result.number[i] = x;
-        current = current - temp * x;
+        result.number[i] = partial_quotient_calculation(right_positive, current);
+ 
     }
 
     result.sign_negative = this->sign_negative != right.sign_negative;
@@ -324,20 +305,12 @@ const LongInteger LongInteger::operator -() const {
     return copy;
 }
 
-void LongInteger::_shift_right() {
-    if (number.empty()) {
-        number.push_back(0);
-        return;
-    }
-    number.insert(number.begin(), 0);
-}
-
 LongInteger& LongInteger::adder(const LongInteger& right, const bool negative)
 {
     int extra = 0;
 
     for (size_t i = 0; i < right.number.size() || extra != 0; ++i) {
-        if (i == this->number.size() && !negative) {
+        if (i == this->number.size()) {
             this->number.push_back(0);
         }
         this->number[i] += (extra + (i < right.number.size() ? right.number[i] : 0)) * (negative ? -1 : 1);
@@ -348,4 +321,20 @@ LongInteger& LongInteger::adder(const LongInteger& right, const bool negative)
     }
     this->_remove_leading_zeros();
     return *this;
+}
+
+int LongInteger::partial_quotient_calculation(const LongInteger& right, LongInteger &current)
+{
+    int incomplete_quotient = 0, left_meaning = 0, right_meaning = LongInteger::BASE;
+    while (left_meaning <= right_meaning) {
+        const int meaning = (left_meaning + right_meaning) / 2;
+        LongInteger t = right * meaning;
+        if (t <= current) {
+            incomplete_quotient = meaning;
+            left_meaning = meaning + 1;
+        }
+        else right_meaning = meaning - 1;
+    }
+    current = current - right * incomplete_quotient;
+    return incomplete_quotient;
 }

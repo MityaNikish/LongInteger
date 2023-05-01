@@ -10,7 +10,7 @@
 
 TEST(TestCase_Ctor, Test_nathing) {
 	LongInteger number_1("123456");
-	EXPECT_TRUE(6 + 1, number_1.ToString(nullptr, 0));
+	EXPECT_EQ(6 + 1, number_1.ToString(nullptr, 0));
 }
 
 TEST(TestCase_Ctor, Test_str) {
@@ -21,9 +21,15 @@ TEST(TestCase_Ctor, Test_str) {
 	delete[](str);
 }
 
+TEST(TestCase_Ctor, Test_uncorestly_str) {
+	EXPECT_THROW({ LongInteger("++1251654"); }, std::invalid_argument);
+	EXPECT_THROW({ LongInteger("1.251654"); }, std::invalid_argument);
+	EXPECT_THROW({ LongInteger("125sfd4"); }, std::invalid_argument);
+}
+
 TEST(TestCase_Ctor, Test_Int) {
 	LongInteger number_1(12506151);
-	EXPECT_TRUE(8 + 1, number_1.ToString(nullptr, 0));
+	EXPECT_EQ(8 + 1, number_1.ToString(nullptr, 0));
 }
 
 //-----------------------------------------------------------------------------//
@@ -69,7 +75,7 @@ TEST(TestCase_ToString, Test3) {
 	input_str_number.push_back('8');
 	
 	for (size_t i = 0; i < number_length(rng); i++) {
-		input_str_number.push_back(numeral(rng) + '0');
+		input_str_number.push_back(static_cast<char>(numeral(rng) + '0'));
 	}
 	input_str_number.push_back('\0');
 	LongInteger number(input_str_number.c_str());
@@ -326,6 +332,36 @@ TEST(TestCase_OperatorAditionNotChanging, Test_DifferentSigns_2) {
 	EXPECT_TRUE(result == result_supposed);
 }
 
+TEST(TestCase_OperatorAditionNotChanging, Test_WithZero) {
+
+	EXPECT_TRUE(LongInteger{} == LongInteger{} + LongInteger{});
+	EXPECT_TRUE(LongInteger("0") == LongInteger{} + LongInteger{});
+	EXPECT_TRUE(LongInteger{} == LongInteger{} + LongInteger("0"));
+	EXPECT_TRUE(LongInteger("0") == LongInteger{} + LongInteger("0"));
+	EXPECT_TRUE(LongInteger("0") == LongInteger{} + LongInteger("-0"));
+	EXPECT_TRUE(LongInteger{} == LongInteger("0") + LongInteger{});
+	EXPECT_TRUE(LongInteger("0") == LongInteger("0") + LongInteger{});
+	EXPECT_TRUE(LongInteger("0") == LongInteger("-0") + LongInteger{});
+	EXPECT_TRUE(LongInteger{} == LongInteger("0") + LongInteger("0"));
+	EXPECT_TRUE(LongInteger("0") == LongInteger("0") + LongInteger("0"));
+	EXPECT_TRUE(LongInteger("0") == LongInteger("-0") + LongInteger("-0"));
+}
+
+TEST(TestCase_OperatorAditionNotChanging, Test_All) {
+
+	EXPECT_TRUE(LongInteger("1000000000") == LongInteger("999999999") + LongInteger("1"));
+	EXPECT_TRUE(LongInteger("1999999998") == LongInteger("999999999") + LongInteger("999999999"));
+	EXPECT_TRUE(LongInteger("9999999998") == LongInteger("4999999999") + LongInteger("4999999999"));
+	EXPECT_TRUE(LongInteger("999999999") == LongInteger("1000000000") + LongInteger("-1"));
+	EXPECT_TRUE(LongInteger("0") == LongInteger("+1234567890") + LongInteger("-1234567890"));
+	EXPECT_TRUE(LongInteger("-999999999") == LongInteger("-1000000000") + LongInteger("1"));
+	EXPECT_TRUE(LongInteger("1000000000") == LongInteger("500000000") + LongInteger("500000000"));
+	EXPECT_TRUE(LongInteger("-1000000000") == LongInteger("-1000000000") + LongInteger("0"));
+	EXPECT_TRUE(LongInteger("1000000000") == LongInteger("1000000000") + LongInteger("0"));
+	EXPECT_TRUE(LongInteger("-1000000000") == LongInteger("-1000000000") + LongInteger("-0"));
+	EXPECT_TRUE(LongInteger("1000000000") == LongInteger("1000000000") + LongInteger("-0"));
+}
+
 //-----------------------------------------------------------------------------//
 
 TEST(TestCase_OperatorAditionChanging, Test_PositiveSign) {
@@ -400,6 +436,18 @@ TEST(TestCase_OperatorSubtractionNotChanging, Test_DifferentSigns_2) {
 	LongInteger result_supposed("10000000000000000000000000000000000000000000000000000000000000");
 	LongInteger result = number_1 - number_2;
 	EXPECT_TRUE(result == result_supposed);
+}
+
+TEST(TestCase_OperatorSubtractionNotChanging, Test_WithZero) {
+
+	EXPECT_TRUE(LongInteger{} == LongInteger{} - LongInteger{});
+	EXPECT_TRUE(LongInteger("0") == LongInteger{} - LongInteger{});
+	EXPECT_TRUE(LongInteger{} == LongInteger{} - LongInteger("0"));
+	EXPECT_TRUE(LongInteger("0") == LongInteger{} - LongInteger("0"));
+	EXPECT_TRUE(LongInteger{} == LongInteger("0") - LongInteger{});
+	EXPECT_TRUE(LongInteger("0") == LongInteger("0") - LongInteger{});
+	EXPECT_TRUE(LongInteger{} == LongInteger("0") - LongInteger("0"));
+	EXPECT_TRUE(LongInteger("0") == LongInteger("0") - LongInteger("0"));
 }
 
 //-----------------------------------------------------------------------------//
@@ -541,6 +589,11 @@ TEST(TestCase_OperatorDivisionNotChanging, Test_CorrecttRansfer) {
 	LongInteger result_supposed("-1000000000000000000000000000");
 	LongInteger result = number_1 / number_2;
 	EXPECT_TRUE(result == result_supposed);
+}
+
+TEST(TestCase_OperatorDivisionNotChanging, Test_DivisionByZero) {
+	EXPECT_THROW({ LongInteger(25) / LongInteger{}; }, std::invalid_argument);
+	EXPECT_THROW({ LongInteger(25) / LongInteger(0);}, std::invalid_argument);
 }
 
 TEST(TestCase_OperatorDivisionNotChanging, Test_PositiveSign) {

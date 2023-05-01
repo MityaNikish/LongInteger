@@ -39,8 +39,9 @@ private:
 	void _remove_leading_zeros();
 	static int _storage_unit_size();
 	const LongInteger operator -() const;
-	void _shift_right();
+	bool is_zero() const;
 	LongInteger& adder(const LongInteger& _right, const bool negative);
+	static int partial_quotient_calculation(const LongInteger& right, LongInteger& current);
 
 private:
 	static const int BASE = 1000000000;
